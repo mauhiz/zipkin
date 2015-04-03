@@ -37,7 +37,7 @@ object ZipkinResolver extends Plugin {
       "conjars.org" at "http://conjars.org/repo"
     ),
 
-    localRepo := file(System.getProperty("user.home") + "/.m2/repository"),
+    localRepo := file(Resolver.mavenLocal.root),
 
     // configure resolvers for the build
     resolvers <<= (resolvers, defaultResolvers, localRepo)
@@ -47,14 +47,13 @@ object ZipkinResolver extends Plugin {
       } getOrElse {
         resolvers ++ defaultResolvers
       }) ++ Seq(
-        // the local repo has to be in here twice, because sbt won't push to a "file:"
-        // repo, but it won't read artifacts from a "Resolver.file" repo. (head -> desk)
-        "local-lookup" at ("file:" + localRepo.getAbsolutePath),
-        Resolver.file("local", localRepo)(Resolver.mavenStylePatterns)
+        Resolver.file("localRepo", localRepo)(Resolver.mavenStylePatterns)
       )
     },
 
     // don't add any special resolvers.
-    externalResolvers <<= (resolvers) map identity
+    externalResolvers <<= (resolvers) map identity,
+
+    updateOptions := updateOptions.value.withCachedResolution(true)
   )
 }
